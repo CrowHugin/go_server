@@ -6,9 +6,14 @@ import (
 )
 
 func main() {
-	route := http.NewServeMux()
-	route.Handle("/", http.FileServer(http.Dir(".")))
-	server := &http.Server{Handler: route, Addr: ":8081"}
+	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
+	mux.Handle("/app/", http.StripPrefix("/app", http.FileServer(http.Dir("."))))
+	server := &http.Server{Handler: mux, Addr: ":8081"}
 	err := server.ListenAndServe()
 	if err != nil {
 		fmt.Print("Error: ", err)
